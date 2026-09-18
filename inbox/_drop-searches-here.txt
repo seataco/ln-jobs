@@ -1,0 +1,27 @@
+Drop saved LinkedIn searches in this folder, then run run.bat.
+
+How to save a search
+1. Open the LinkedIn job search while you are logged in.
+2. Scroll until the jobs you care about are on the page.
+3. File, Save Page As, Webpage, Complete.
+4. Put the .html or .htm file in this folder.
+
+The file name and browser title will be whichever result LinkedIn already opened
+on the right. That is the correct page. The list is still in the file.
+
+To include descriptions, do not save each job page. Open the search, scroll the
+list, then use collect-descriptions.html. It walks the jobs already loaded and
+downloads one file. Put that file in this folder and run the sorter again.
+
+Or paste jobs into a .txt file in this folder, one posting per block:
+
+---
+title: Junior Unity Developer
+company: Harbor Light Games
+location: Hartford, CT
+url: https://www.linkedin.com/jobs/view/123
+description:
+The posting text you copied.
+---
+
+Then run linkedin_jobs.py. Edit profile.json if a company should be treated as a board, or if a title should count as a fit.

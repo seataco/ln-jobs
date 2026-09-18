@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Collect LinkedIn descriptions</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font: 17px/1.5 Georgia, "Iowan Old Style", Palatino, serif;
+      color: #1c1917;
+      background: #fafaf9;
+    }
+    main { max-width: 680px; margin: 0 auto; padding: 40px 20px 72px; }
+    h1 { font-size: 1.7rem; line-height: 1.2; }
+    ol { padding-left: 1.2rem; }
+    li { margin: 0 0 10px; }
+    button, a.button {
+      display: inline-block;
+      margin-top: 8px;
+      background: #9a3412;
+      color: #fff;
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 14px;
+      font: inherit;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .note { color: #57534e; }
+    code { font-family: Consolas, monospace; font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Read the descriptions without saving each job</h1>
+    <p>A saved search page only includes the description of the job LinkedIn already opened. This collector walks the jobs already loaded on that search and downloads one file.</p>
+    <ol>
+      <li>Open the LinkedIn job search and scroll until the jobs you want are on the page.</li>
+      <li>Press F12, open Console, and type <code>allow pasting</code> if the console asks.</li>
+      <li>Click the button below, then paste into that console and press Enter.</li>
+      <li>Wait until a file downloads. A 25-job list takes about a minute.</li>
+      <li>Put that file in the <code>inbox</code> folder and run <code>run.bat</code>.</li>
+    </ol>
+    <p><button id="copy" type="button">Copy collector</button></p>
+    <p class="note" id="status"></p>
+    <script type="text/plain" id="collector">// Paste this into the browser console on a LinkedIn job search you already have open.
+// It clicks each job already loaded on the page, reads the description, and downloads a file.
+// Drop that file in the inbox folder, then run linkedin_jobs.py.
+(async function collectLinkedInJobs() {
+  const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  function status(text) {
+    let box = document.getElementById("job-collect-status");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "job-collect-status";
+      box.style.cssText = [
+        "position:fixed",
+        "bottom:16px",
+        "right:16px",
+        "z-index:2147483647",
+        "background:#1c1917",
+        "color:#fafaf9",
+        "padding:12px 14px",
+        "border-radius:10px",
+        "max-width:280px",
+        "font:15px/1.4 Georgia,serif",
+        "box-shadow:0 8px 24px rgba(0,0,0,.25)",
+      ].join(";");
+      document.body.appendChild(box);
+    }
+    box.textContent = text;
+  }
+
+  function cards() {
+    const seen = new Set();
+    const found = [];
+    for (const card of document.querySelectorAll('[componentkey^="job-card-component-ref-"]')) {
+      const id = (card.getAttribute("componentkey") || "").replace("job-card-component-ref-", "");
+      const box = card.getBoundingClientRect();
+      if (!id || seen.has(id) || box.width < 40 || box.height < 20) continue;
+      seen.add(id);
+      found.push({ id, card });
+    }
+    return found;
+  }
+
+  function heading() {
+    return [...document.querySelectorAll("h1, h2, h3, span, div")].find((node) => {
+      const text = (node.innerText || "").trim();
+      return text === "About the job" && node.childElementCount < 4;
+    });
+  }
+
+  function description() {
+    const node = heading();
+    if (!node) return "";
+    let box = node.parentElement;
+    for (let i = 0; i < 8 && box; i += 1) {
+      const text = (box.innerText || "").trim();
+      if (text.startsWith("About the job") && text.length > 180) {
+        return text.replace(/^About the job\s*/i, "").trim();
+      }
+      box = box.parentElement;
+    }
+    return "";
+  }
+
+  function linesFrom(card) {
+    return (card.innerText || "")
+      .split("\n")
+      .map((line) => line.replace(/\s+/g, " ").trim())
+      .filter((line) => line && !/^(easy apply|promoted|applied|viewed)$/i.test(line));
+  }
+
+  function fields(card) {
+    const lines = [];
+    for (const line of linesFrom(card)) {
+      const clean = line.replace(/\s*\(Verified job\)\s*$/i, "");
+      if (!lines.length) {
+        lines.push(clean);
+        continue;
+      }
+      if (lines[lines.length - 1] === clean || lines[lines.length - 1].startsWith(clean)) {
+        lines[lines.length - 1] = clean;
+        continue;
+      }
+      if (clean.startsWith(lines[lines.length - 1])) continue;
+      lines.push(clean);
+    }
+    const title = lines[0] || "";
+    const company = lines[1] || "";
+    let location = "";
+    for (const line of lines.slice(2, 6)) {
+      if (/\bago\b|applicant|alumni/i.test(line)) continue;
+      location = line;
+      break;
+    }
+    return { title, company, location };
+  }
+
+  async function waitForJob(id, previous) {
+    const start = Date.now();
+    while (Date.now() - start < 8000) {
+      const text = description();
+      const open = new URL(location.href).searchParams.get("currentJobId");
+      if (text && text !== previous && (open === id || text.length > 180)) return text;
+      await pause(250);
+    }
+    return description();
+  }
+
+  const search = new URL(location.href).searchParams.get("keywords") || "";
+  const list = cards();
+  if (!list.length) {
+    status("No job list found. Open a LinkedIn job search first, then run this again.");
+    return;
+  }
+
+  const jobs = [];
+  status("Reading " + list.length + " jobs already loaded on this page.");
+  let previous = "";
+  for (let i = 0; i < list.length; i += 1) {
+    const item = list[i];
+    status("Reading " + (i + 1) + " of " + list.length + "…");
+    item.card.scrollIntoView({ block: "center" });
+    item.card.click();
+    const text = await waitForJob(item.id, previous);
+    previous = text;
+    const info = fields(item.card);
+    jobs.push({
+      id: item.id,
+      title: info.title,
+      company: info.company,
+      location: info.location,
+      description: text,
+      url: "https://www.linkedin.com/jobs/view/" + item.id + "/",
+      search,
+    });
+    await pause(900);
+  }
+
+  const payload = { search, jobs };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  const stamp = new Date().toISOString().slice(0, 10);
+  link.href = URL.createObjectURL(blob);
+  link.download = "linkedin-descriptions-" + stamp + ".json";
+  link.click();
+  status("Saved " + jobs.length + " descriptions. Put that file in the inbox folder and run the sorter.");
+})();
+</script>
+    <p class="note">It only reads the search you already have open. It does not log in or send the jobs anywhere. Keep the tab in front while it runs. LinkedIn can dislike a script clicking a very long list, so use the jobs on one loaded page rather than hundreds.</p>
+  </main>
+  <script>
+    const status = document.getElementById("status");
+    async function collectorText() {
+      const embedded = document.getElementById("collector").textContent.trim();
+      if (embedded) return embedded;
+      const response = await fetch("collect-descriptions.js");
+      return response.text();
+    }
+    document.getElementById("copy").addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(await collectorText());
+        status.textContent = "Copied. Paste it into the LinkedIn console.";
+      } catch (error) {
+        status.textContent = "Could not copy from here. Open collect-descriptions.js, select all, and copy that instead.";
+      }
+    });
+  </script>
+</body>
+</html>

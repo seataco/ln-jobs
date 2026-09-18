@@ -1,0 +1,52 @@
+# Example postings so you can see the three buckets before you add your own searches.
+# Real LinkedIn saves go in inbox/. See the script help for how to add them.
+
+---
+title: Junior Unity Developer
+company: Harbor Light Games
+location: Hartford, CT (Hybrid)
+url: https://www.linkedin.com/jobs/view/example-unity
+description:
+Small studio shipping a narrative game. Looking for a junior Unity developer to write C# gameplay scripts, use Git, and work with a designer. 0-2 years is fine. A student or indie project is enough. Contract to start.
+---
+title: Computer Skills Tutor
+company: Farmington Valley Library
+location: Canton, CT
+url: https://www.linkedin.com/jobs/view/example-tutor
+description:
+Part-time instructor for adult computer classes. Comfort teaching beginners, writing short lesson notes, and helping people one to one. No classroom certificate required. Evenings.
+---
+title: Senior Gameplay Programmer
+company: Northline Studios
+location: Boston, MA (On-site)
+url: https://www.linkedin.com/jobs/view/example-senior
+description:
+Senior gameplay programmer for an Unreal title. You have shipped at least two commercial games and have 7+ years of professional C++ experience. You will lead a gameplay team and mentor junior engineers.
+---
+title: Staff Software Engineer
+company: Ledger Lane
+location: Remote - United States
+url: https://www.linkedin.com/jobs/view/example-staff
+description:
+Staff engineer on a TypeScript and React product. 6+ years building production web apps. You set technical direction, review architecture, and own a platform area. SQL experience required.
+---
+title: Junior Software Engineer - Spontaneous Application
+company: Joinrs US
+location: New York, Los Angeles, Chicago, Miami, Boston, Remote
+url: https://www.linkedin.com/jobs/view/example-joinrs
+description:
+Spontaneous application. We are constantly looking for students, recent graduates, and junior professionals. Apply and our team will contact you as soon as a role in this area becomes available and your CV matches. Join a community of over 1,500,000 users. Fully remote internship, $90,000. You will work on Joinrs AI, the model that matches people to jobs on our platform.
+---
+title: Software Developer
+company: Jobright
+location: United States
+url: https://www.linkedin.com/jobs/view/example-jobright
+description:
+We match you with employers. Create a profile to apply and get matched with opportunities. This is not a specific opening. Upload your resume so our talent network can keep you in mind for future roles across many companies.
+---
+title: Registered Nurse
+company: Valley Medical
+location: Simsbury, CT
+url: https://www.linkedin.com/jobs/view/example-nurse
+description:
+Night shift RN. Active nursing license required. 2 years of bedside experience. Competitive pay and benefits.
